@@ -1,4 +1,4 @@
-# 本地运行、宝塔部署与 API 文档说明
+# 本地运行、宝塔直跑与 API 文档说明
 
 ## 1. 项目结构
 
@@ -75,71 +75,159 @@
   - `NEXT_PUBLIC_SOCKET_URL`
   - `NEXT_PUBLIC_COOKIE_DOMAIN`
 
-## 3. 宝塔部署建议
+## 3. 宝塔直跑（无 Docker）
 
-### 3.1 推荐方案：Docker Compose 部署
+这条路径适合你要在服务器上直接跑源码，不使用 Docker。
 
-这是最稳妥的方式，适合宝塔服务器：
+### 3.1 你需要先准备的服务
 
-1. 服务器安装 Docker 和 Docker Compose
-2. 把仓库代码上传或拉到服务器
-3. 进入 `docker/`
-4. 复制环境文件：
+至少准备这些运行时：
+
+- Python 3.12
+- Node.js 20+
+- pnpm
+- `uv`
+- PostgreSQL
+- Redis
+- 向量数据库
+
+说明：
+
+- 仓库默认配置指向 Weaviate
+- 如果你不想单独部署 Weaviate，需要改成你自己能长期维护的向量存储方案
+
+### 3.2 推荐进程拆分
+
+建议在宝塔服务器上拆成 4 个进程：
+
+1. 后端 API
+2. Celery worker
+3. 前端 Web
+4. Nginx 反向代理
+
+### 3.3 安装依赖
+
+在仓库根目录执行：
 
 ```bash
-cp .env.example .env
-cp envs/middleware.env.example middleware.env
+cd api
+uv sync --group dev
+cd ..
+pnpm install
 ```
 
-5. 修改 `docker/.env` 和 `docker/middleware.env`
-6. 启动：
+### 3.4 配置环境文件
+
+使用这两个文件，不要用 Docker 的 `.env`：
+
+- `api/.env`
+- `web/.env.local`
+
+先从示例复制：
 
 ```bash
-docker compose up -d
+cp api/.env.example api/.env
+cp web/.env.example web/.env.local
 ```
 
-### 3.2 宝塔上如何接入
+然后重点修改：
 
-宝塔一般有两种接法：
+- `api/.env`
+  - `CONSOLE_API_URL`
+  - `SERVICE_API_URL`
+  - `APP_WEB_URL`
+  - `FILES_URL`
+  - `INTERNAL_FILES_URL`
+  - `COOKIE_DOMAIN`
+  - `SECRET_KEY`
+  - `DB_HOST`
+  - `DB_PORT`
+  - `DB_DATABASE`
+  - `REDIS_HOST`
+  - `REDIS_PORT`
 
-#### 方案 A：Docker 自己占用 80 / 443
+- `web/.env.local`
+  - `NEXT_PUBLIC_API_PREFIX`
+  - `NEXT_PUBLIC_PUBLIC_API_PREFIX`
+  - `NEXT_PUBLIC_SOCKET_URL`
+  - `NEXT_PUBLIC_COOKIE_DOMAIN`
 
-适合你希望尽量少改架构的情况。
+如果前后端用不同子域名，`COOKIE_DOMAIN` 要填顶级域名。
 
-- 让 `docker-compose.yaml` 里的 Nginx 容器直接监听 80 / 443
-- 宝塔只负责查看日志、放行端口、做系统管理
+### 3.5 数据库迁移
 
-#### 方案 B：宝塔 Nginx 反代到 Docker
+先执行迁移：
 
-适合宝塔已经在占用 80 / 443 的情况。
+```bash
+cd api
+uv run flask db upgrade
+```
 
-- 让 Docker 的 Nginx 改成其他宿主机端口
-- 宝塔 Nginx 反向代理到容器端口
-- 这样宝塔继续负责域名、证书和站点配置
+### 3.6 启动后端
 
-### 3.3 生产环境必须改的变量
+开发调试可以用：
 
-建议把 `docker/.env` 改成你的真实域名，例如：
+```bash
+cd api
+uv run flask run --host 0.0.0.0 --port 5001 --debug
+```
 
-- `CONSOLE_API_URL=https://dify.example.com`
-- `SERVICE_API_URL=https://dify.example.com`
-- `APP_WEB_URL=https://dify.example.com`
-- `NEXT_PUBLIC_API_PREFIX=https://dify.example.com/console/api`
-- `NEXT_PUBLIC_PUBLIC_API_PREFIX=https://dify.example.com/api`
-- `NEXT_PUBLIC_SOCKET_URL=wss://dify.example.com`
-- `COOKIE_DOMAIN=example.com`
-- `NEXT_PUBLIC_COOKIE_DOMAIN=1` 或按你的域名策略配置
+生产建议用 `gunicorn`，仓库的容器入口也是这么做的，参数见 [api/docker/entrypoint.sh](/c:/wamp64/www/ai-rag-dify/api/docker/entrypoint.sh#L126)：
 
-如果前后端分不同子域名，`COOKIE_DOMAIN` 必须是顶级域名，才能共享登录态。
+```bash
+cd api
+uv run gunicorn \
+  --bind 0.0.0.0:5001 \
+  --workers 1 \
+  --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+  --worker-connections 10 \
+  --timeout 200 \
+  app:socketio_app
+```
 
-### 3.4 数据持久化
+### 3.7 启动 worker
 
-Docker 部署时要保留这些目录：
+```bash
+cd api
+uv run celery -A celery_entrypoint.celery worker -P gevent -c 1 --max-tasks-per-child 50 --loglevel INFO -Q dataset,dataset_summary,priority_dataset,priority_pipeline,pipeline,mail,ops_trace,app_deletion,plugin,workflow_storage,conversation,workflow,schedule_poller,schedule_executor,triggered_workflow_dispatcher,trigger_refresh_publisher,trigger_refresh_executor,retention,workflow_based_app_execution
+```
 
-- `docker/volumes/`
-- `api/storage/` 或 Docker 挂载的存储路径
+如果你是社区版，这个队列列表和仓库默认逻辑是一致的。
 
-数据库、Redis、向量库和上传文件都依赖这些持久化卷。
+### 3.8 启动前端
+
+```bash
+cd web
+pnpm build
+pnpm start
+```
+
+默认前端服务跑在 `3000`。
+
+### 3.9 宝塔 Nginx 反代
+
+宝塔里把域名反代到你的前端和后端：
+
+- 前端：`http://127.0.0.1:3000`
+- 后端：`http://127.0.0.1:5001`
+
+如果你想只暴露一个域名，常见做法是：
+
+- `https://your-domain.com` -> 前端
+- `https://your-domain.com/console/api` -> 后端
+- `https://your-domain.com/api` -> 后端
+
+Socket.io 也要一起反代到后端。
+
+### 3.10 日常管理建议
+
+宝塔上建议用：
+
+- `supervisord`
+- 或 `systemd`
+- 或宝塔的守护进程功能
+
+来托管 API、worker、Web 三个长进程。
 
 ## 4. API 文档整理方式
 
@@ -201,16 +289,32 @@ uv run dev/generate_swagger_markdown_docs.py --swagger-dir openapi --markdown-di
 - 前端：`http://localhost:3000`
 - 后端：`http://localhost:5001`
 
-### 宝塔服务器
+### 宝塔服务器直跑
 
 ```bash
-cd docker
-cp .env.example .env
-cp envs/middleware.env.example middleware.env
-docker compose up -d
+cd api
+uv sync --group dev
+uv run flask db upgrade
+uv run gunicorn --bind 0.0.0.0:5001 --workers 1 --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --worker-connections 10 --timeout 200 app:socketio_app
 ```
 
-然后把域名、反代、Cookie 域名、WebSocket 地址改成你的真实线上配置。
+另开终端启动：
+
+```bash
+cd api
+uv run celery -A celery_entrypoint.celery worker -P gevent -c 1 --max-tasks-per-child 50 --loglevel INFO -Q dataset,dataset_summary,priority_dataset,priority_pipeline,pipeline,mail,ops_trace,app_deletion,plugin,workflow_storage,conversation,workflow,schedule_poller,schedule_executor,triggered_workflow_dispatcher,trigger_refresh_publisher,trigger_refresh_executor,retention,workflow_based_app_execution
+```
+
+再启动前端：
+
+```bash
+pnpm install
+cd web
+pnpm build
+pnpm start
+```
+
+然后把宝塔 Nginx 反代到 `3000` 和 `5001`。
 
 ## 6. 注意事项
 
