@@ -96,6 +96,12 @@ cd /path/to/ai-rag-dify
 - Web listens on `http://127.0.0.1:3002`
 - The web UI is set up by visiting `http://localhost:3002`
 
+For server updates, use:
+
+```bash
+./dev/deploy-server
+```
+
 #### Seeking help
 
 Please refer to our [FAQ](https://docs.dify.ai/getting-started/install-self-hosted/faqs) if you encounter problems setting up Dify. Reach out to [the community and us](#community--contact) if you are still having issues.

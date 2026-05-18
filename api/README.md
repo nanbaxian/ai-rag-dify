@@ -34,6 +34,12 @@ The scripts resolve paths relative to their location, so you can run them from a
 
 1. Set up your application by visiting `http://localhost:3002`.
 
+For server redeploys and updates, you can run:
+
+```bash
+./dev/deploy-server
+```
+
 1. Optional: start Celery Beat (scheduled tasks).
 
    ```bash
