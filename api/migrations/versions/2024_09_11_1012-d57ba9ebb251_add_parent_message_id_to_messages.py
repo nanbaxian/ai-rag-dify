@@ -29,8 +29,10 @@ def upgrade():
     # Set parent_message_id for existing messages to distinguish them from new messages with actual parent IDs or NULLs
     conn = op.get_bind()
     if _is_pg(conn):
-        # PostgreSQL: Use uuid_nil() function
-        op.execute('UPDATE messages SET parent_message_id = uuid_nil() WHERE parent_message_id IS NULL')
+        op.execute(
+            "UPDATE messages SET parent_message_id = '00000000-0000-0000-0000-000000000000' "
+            "WHERE parent_message_id IS NULL"
+        )
     else:
         # MySQL: Use a specific UUID value to represent nil
         op.execute("UPDATE messages SET parent_message_id = '00000000-0000-0000-0000-000000000000' WHERE parent_message_id IS NULL")
