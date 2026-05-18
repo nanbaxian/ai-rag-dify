@@ -4,6 +4,48 @@ set -euo pipefail
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ROOT="$(dirname "$SCRIPT_DIR")"
 
+DEPLOY_CONSOLE_WEB_URL="${DEPLOY_CONSOLE_WEB_URL:-https://airagfront.flashcoding.ca}"
+DEPLOY_CONSOLE_API_URL="${DEPLOY_CONSOLE_API_URL:-https://airagapi.flashcoding.ca}"
+DEPLOY_SERVICE_API_URL="${DEPLOY_SERVICE_API_URL:-https://airagapi.flashcoding.ca}"
+DEPLOY_APP_WEB_URL="${DEPLOY_APP_WEB_URL:-https://airagfront.flashcoding.ca}"
+DEPLOY_INTERNAL_FILES_URL="${DEPLOY_INTERNAL_FILES_URL:-http://127.0.0.1:5001}"
+DEPLOY_TRIGGER_URL="${DEPLOY_TRIGGER_URL:-https://airagapi.flashcoding.ca}"
+DEPLOY_COOKIE_DOMAIN="${DEPLOY_COOKIE_DOMAIN:-flashcoding.ca}"
+DEPLOY_CONSOLE_CORS_ALLOW_ORIGINS="${DEPLOY_CONSOLE_CORS_ALLOW_ORIGINS:-https://airagfront.flashcoding.ca}"
+DEPLOY_WEB_API_CORS_ALLOW_ORIGINS="${DEPLOY_WEB_API_CORS_ALLOW_ORIGINS:-https://airagfront.flashcoding.ca}"
+DEPLOY_DB_DATABASE="${DEPLOY_DB_DATABASE:-ai_rag_dify}"
+DEPLOY_REDIS_USERNAME="${DEPLOY_REDIS_USERNAME:-}"
+DEPLOY_REDIS_PASSWORD="${DEPLOY_REDIS_PASSWORD:-}"
+DEPLOY_CELERY_BROKER_URL="${DEPLOY_CELERY_BROKER_URL:-redis://localhost:6379/1}"
+DEPLOY_NEXT_PUBLIC_DEPLOY_ENV="${DEPLOY_NEXT_PUBLIC_DEPLOY_ENV:-PRODUCTION}"
+DEPLOY_NEXT_PUBLIC_EDITION="${DEPLOY_NEXT_PUBLIC_EDITION:-SELF_HOSTED}"
+DEPLOY_NEXT_PUBLIC_API_PREFIX="${DEPLOY_NEXT_PUBLIC_API_PREFIX:-https://airagapi.flashcoding.ca/console/api}"
+DEPLOY_NEXT_PUBLIC_PUBLIC_API_PREFIX="${DEPLOY_NEXT_PUBLIC_PUBLIC_API_PREFIX:-https://airagapi.flashcoding.ca/api}"
+DEPLOY_NEXT_PUBLIC_COOKIE_DOMAIN="${DEPLOY_NEXT_PUBLIC_COOKIE_DOMAIN:-1}"
+DEPLOY_NEXT_PUBLIC_SOCKET_URL="${DEPLOY_NEXT_PUBLIC_SOCKET_URL:-wss://airagapi.flashcoding.ca}"
+DEPLOY_NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS="${DEPLOY_NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS:-60000}"
+
+ensure_env_file() {
+  local env_file="$1"
+  local example_file="$2"
+  shift 2
+
+  if [[ ! -f "$env_file" ]]; then
+    cp "$example_file" "$env_file"
+  fi
+
+  local kv key value
+  for kv in "$@"; do
+    key="${kv%%=*}"
+    value="${kv#*=}"
+    if grep -q "^${key}=" "$env_file"; then
+      perl -0pi -e "s#^${key}=.*#${key}=${value}#m" "$env_file"
+    else
+      printf '%s=%s\n' "$key" "$value" >>"$env_file"
+    fi
+  done
+}
+
 cd "$ROOT"
 
 echo "Updating repository at $ROOT"
@@ -28,6 +70,36 @@ if [[ -n "$(git status --porcelain --untracked-files=no -- "${DEPLOY_PATHSPEC[@]
 fi
 
 GIT_TERMINAL_PROMPT=0 git pull --ff-only
+
+echo "Syncing server environment files..."
+ensure_env_file \
+  "$ROOT/api/.env" \
+  "$ROOT/api/.env.example" \
+  "CONSOLE_API_URL=${DEPLOY_CONSOLE_API_URL}" \
+  "CONSOLE_WEB_URL=${DEPLOY_CONSOLE_WEB_URL}" \
+  "SERVICE_API_URL=${DEPLOY_SERVICE_API_URL}" \
+  "APP_WEB_URL=${DEPLOY_APP_WEB_URL}" \
+  "FILES_URL=${DEPLOY_CONSOLE_API_URL}" \
+  "INTERNAL_FILES_URL=${DEPLOY_INTERNAL_FILES_URL}" \
+  "TRIGGER_URL=${DEPLOY_TRIGGER_URL}" \
+  "COOKIE_DOMAIN=${DEPLOY_COOKIE_DOMAIN}" \
+  "CONSOLE_CORS_ALLOW_ORIGINS=${DEPLOY_CONSOLE_CORS_ALLOW_ORIGINS}" \
+  "WEB_API_CORS_ALLOW_ORIGINS=${DEPLOY_WEB_API_CORS_ALLOW_ORIGINS}" \
+  "DB_DATABASE=${DEPLOY_DB_DATABASE}" \
+  "REDIS_USERNAME=${DEPLOY_REDIS_USERNAME}" \
+  "REDIS_PASSWORD=${DEPLOY_REDIS_PASSWORD}" \
+  "CELERY_BROKER_URL=${DEPLOY_CELERY_BROKER_URL}"
+
+ensure_env_file \
+  "$ROOT/web/.env.local" \
+  "$ROOT/web/.env.example" \
+  "NEXT_PUBLIC_DEPLOY_ENV=${DEPLOY_NEXT_PUBLIC_DEPLOY_ENV}" \
+  "NEXT_PUBLIC_EDITION=${DEPLOY_NEXT_PUBLIC_EDITION}" \
+  "NEXT_PUBLIC_API_PREFIX=${DEPLOY_NEXT_PUBLIC_API_PREFIX}" \
+  "NEXT_PUBLIC_PUBLIC_API_PREFIX=${DEPLOY_NEXT_PUBLIC_PUBLIC_API_PREFIX}" \
+  "NEXT_PUBLIC_COOKIE_DOMAIN=${DEPLOY_NEXT_PUBLIC_COOKIE_DOMAIN}" \
+  "NEXT_PUBLIC_SOCKET_URL=${DEPLOY_NEXT_PUBLIC_SOCKET_URL}" \
+  "NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS=${DEPLOY_NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS}"
 
 echo "Syncing backend dependencies..."
 cd "$ROOT/api"
