@@ -8,12 +8,20 @@ cd "$ROOT"
 
 echo "Updating repository at $ROOT"
 
+REMOTE_URL="$(git remote get-url origin)"
+if [[ "$REMOTE_URL" == https://github.com/* ]]; then
+  echo "Git remote is HTTPS: $REMOTE_URL"
+  echo "Switch origin to SSH once, then this script will run unattended:"
+  echo "  git remote set-url origin git@github.com:nanbaxian/ai-rag-dify.git"
+  exit 1
+fi
+
 if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
   echo "Local changes detected, stashing them before pull..."
   git stash push -m "deploy-server auto stash $(date '+%Y-%m-%d %H:%M:%S')" >/dev/null
 fi
 
-git pull --ff-only
+GIT_TERMINAL_PROMPT=0 git pull --ff-only
 
 echo "Syncing backend dependencies..."
 cd "$ROOT/api"

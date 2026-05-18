@@ -102,6 +102,8 @@ For server updates, use:
 ./dev/deploy-server
 ```
 
+Note: `./dev/deploy-server` expects your `origin` remote to use SSH, not HTTPS, so it can run without interactive GitHub prompts.
+
 #### Seeking help
 
 Please refer to our [FAQ](https://docs.dify.ai/getting-started/install-self-hosted/faqs) if you encounter problems setting up Dify. Reach out to [the community and us](#community--contact) if you are still having issues.
