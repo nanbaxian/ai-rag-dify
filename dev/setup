@@ -25,3 +25,10 @@ cd "$ROOT/api"
 uv sync --group dev
 
 pnpm --dir "$ROOT" install
+
+# 5) Ensure the local service scripts remain executable after checkout.
+chmod +x \
+  "$ROOT/dev/start-api" \
+  "$ROOT/dev/start-worker" \
+  "$ROOT/dev/start-web" \
+  "$ROOT/dev/_service_control.sh"
