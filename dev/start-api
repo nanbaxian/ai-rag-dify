@@ -1,11 +1,42 @@
 #!/bin/bash
 
-set -x
+set -euo pipefail
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-cd "$SCRIPT_DIR/../api"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+source "$SCRIPT_DIR/_service_control.sh"
 
-uv run flask db upgrade
+MODE="background"
 
-uv run \
-  flask run --host 0.0.0.0 --port=5001 --debug
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --foreground)
+      MODE="foreground"
+      shift
+      ;;
+    --status)
+      service_status "api"
+      exit 0
+      ;;
+    --stop)
+      service_stop "api"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--foreground|--status|--stop]"
+      exit 1
+      ;;
+  esac
+done
+
+API_DIR="$ROOT_DIR/api"
+API_COMMAND='uv run flask db upgrade && exec uv run gunicorn --bind 0.0.0.0:5001 --workers 1 --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --worker-connections 10 --timeout 200 app:socketio_app'
+
+if [[ "$MODE" == "foreground" ]]; then
+  cd "$API_DIR"
+  uv run flask db upgrade
+  exec uv run gunicorn --bind 0.0.0.0:5001 --workers 1 --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --worker-connections 10 --timeout 200 app:socketio_app
+fi
+
+service_start_background_shell "api" "$API_DIR" "$API_COMMAND"

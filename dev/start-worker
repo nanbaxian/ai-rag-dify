@@ -1,6 +1,10 @@
 #!/bin/bash
 
-set -x
+set -euo pipefail
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+source "$SCRIPT_DIR/_service_control.sh"
 
 # Help function
 show_help() {
@@ -48,9 +52,14 @@ POOL="gevent"
 LOGLEVEL="INFO"
 
 ENV_FILE=""
+MODE="background"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --foreground)
+      MODE="foreground"
+      shift
+      ;;
     -q|--queues)
       QUEUES="$2"
       shift 2
@@ -75,6 +84,14 @@ while [[ $# -gt 0 ]]; do
       show_help
       exit 0
       ;;
+    --status)
+      service_status "worker"
+      exit 0
+      ;;
+    --stop)
+      service_stop "worker"
+      exit 0
+      ;;
     *)
       echo "Unknown option: $1"
       show_help
@@ -83,21 +100,21 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-cd "$SCRIPT_DIR/../api"
-
 if [[ -n "${ENV_FILE}" ]]; then
   if [[ ! -f "${ENV_FILE}" ]]; then
     echo "Env file ${ENV_FILE} not found"
     exit 1
   fi
 
+  ENV_FILE="$(realpath "${ENV_FILE}")"
   echo "Loading environment variables from ${ENV_FILE}"
   # Export everything sourced from the env file
   set -a
   source "${ENV_FILE}"
   set +a
 fi
+
+cd "$ROOT_DIR/api"
 
 # If no queues specified, use edition-based defaults
 if [[ -z "${QUEUES}" ]]; then
@@ -124,6 +141,10 @@ echo "  Concurrency: ${CONCURRENCY}"
 echo "  Pool: ${POOL}"
 echo "  Log Level: ${LOGLEVEL}"
 
-uv run \
-  celery -A app.celery worker \
-  -P ${POOL} -c ${CONCURRENCY} --loglevel ${LOGLEVEL} -Q ${QUEUES}
+WORKER_COMMAND="uv run celery -A app.celery worker -P ${POOL} -c ${CONCURRENCY} --loglevel ${LOGLEVEL} -Q ${QUEUES}"
+
+if [[ "$MODE" == "foreground" ]]; then
+  exec bash -lc "$WORKER_COMMAND"
+fi
+
+service_start_background_shell "worker" "$ROOT_DIR/api" "$WORKER_COMMAND"

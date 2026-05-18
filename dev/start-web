@@ -1,8 +1,40 @@
 #!/bin/bash
 
-set -x
+set -euo pipefail
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+source "$SCRIPT_DIR/_service_control.sh"
 
-pnpm --dir "$ROOT_DIR" install && pnpm --dir "$ROOT_DIR/web" dev:inspect
+MODE="background"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --foreground)
+      MODE="foreground"
+      shift
+      ;;
+    --status)
+      service_status "web"
+      exit 0
+      ;;
+    --stop)
+      service_stop "web"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--foreground|--status|--stop]"
+      exit 1
+      ;;
+  esac
+done
+
+WEB_DIR="$ROOT_DIR/web"
+WEB_COMMAND="pnpm --dir ${WEB_DIR} start"
+
+if [[ "$MODE" == "foreground" ]]; then
+  exec bash -lc "$WEB_COMMAND"
+fi
+
+service_start_background_shell "web" "$WEB_DIR" "$WEB_COMMAND"
