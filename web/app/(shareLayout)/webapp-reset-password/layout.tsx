@@ -30,7 +30,7 @@ export default function SignInLayout({ children }: any) {
               {' '}
               {new Date().getFullYear()}
               {' '}
-              LangGenius, Inc. All rights reserved.
+              Flashcoding Tech Inc. All rights reserved.
             </div>
           )}
         </div>

@@ -37,7 +37,7 @@ const FlashLogo: FC<FlashLogoProps> = ({
     <img
       src={`${basePath}${logoPathMap[themedStyle]}`}
       className={cn('block object-contain', logoSizeMap[size], className)}
-      alt="Flash logo"
+      alt="Flash AI logo"
     />
   )
 }
