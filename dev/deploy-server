@@ -109,6 +109,12 @@ echo "Syncing frontend dependencies..."
 cd "$ROOT"
 pnpm install
 
+echo "Stopping web before rebuild..."
+./dev/start-web --stop || true
+
+echo "Clearing frontend build artifacts..."
+rm -rf "$ROOT/web/.next"
+
 echo "Building frontend..."
 cd "$ROOT/web"
 node ./node_modules/next/dist/bin/next build
@@ -117,7 +123,6 @@ cd "$ROOT"
 echo "Restarting services..."
 ./dev/start-api --stop || true
 ./dev/start-worker --stop || true
-./dev/start-web --stop || true
 
 ./dev/start-api
 ./dev/start-worker
