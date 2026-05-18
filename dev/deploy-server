@@ -16,9 +16,15 @@ if [[ "$REMOTE_URL" == https://github.com/* ]]; then
   exit 1
 fi
 
-if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+DEPLOY_PATHSPEC=(
+  '.'
+  ':(exclude).user.ini'
+  ':(exclude)api/.user.ini'
+)
+
+if [[ -n "$(git status --porcelain --untracked-files=no -- "${DEPLOY_PATHSPEC[@]}")" ]]; then
   echo "Local changes detected, stashing them before pull..."
-  git stash push -m "deploy-server auto stash $(date '+%Y-%m-%d %H:%M:%S')" >/dev/null
+  git stash push -m "deploy-server auto stash $(date '+%Y-%m-%d %H:%M:%S')" -- "${DEPLOY_PATHSPEC[@]}" >/dev/null
 fi
 
 GIT_TERMINAL_PROMPT=0 git pull --ff-only
