@@ -28,7 +28,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('provider_models',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('provider_name', sa.String(length=40), nullable=False),
         sa.Column('model_name', sa.String(length=40), nullable=False),
@@ -60,7 +60,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('tenant_default_models',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('provider_name', sa.String(length=40), nullable=False),
         sa.Column('model_name', sa.String(length=40), nullable=False),
@@ -86,7 +86,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('tenant_preferred_model_providers',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('provider_name', sa.String(length=40), nullable=False),
         sa.Column('preferred_provider_type', sa.String(length=40), nullable=False),

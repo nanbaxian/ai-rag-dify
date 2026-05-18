@@ -33,7 +33,7 @@ def downgrade():
     
     if _is_pg(conn):
         op.create_table('tool_providers',
-        sa.Column('id', sa.UUID(), server_default=sa.text('uuid_generate_v4()'), autoincrement=False, nullable=False),
+        sa.Column('id', sa.UUID(), server_default=sa.text('uuidv4()'), autoincrement=False, nullable=False),
         sa.Column('tenant_id', sa.UUID(), autoincrement=False, nullable=False),
         sa.Column('tool_name', sa.VARCHAR(length=40), autoincrement=False, nullable=False),
         sa.Column('encrypted_credentials', sa.TEXT(), autoincrement=False, nullable=True),

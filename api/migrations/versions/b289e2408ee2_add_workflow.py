@@ -28,7 +28,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('workflow_app_logs',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('workflow_id', postgresql.UUID(), nullable=False),
@@ -57,7 +57,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('workflow_node_executions',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('workflow_id', postgresql.UUID(), nullable=False),
@@ -113,7 +113,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('workflow_runs',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('sequence_number', sa.Integer(), nullable=False),
@@ -164,7 +164,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('workflows',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('type', sa.String(length=255), nullable=False),

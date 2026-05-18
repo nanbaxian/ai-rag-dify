@@ -29,7 +29,7 @@ def upgrade():
     if _is_pg(conn):
         op.create_table(
             "workflow_draft_variables",
-            sa.Column("id", models.types.StringUUID(), server_default=sa.text("uuid_generate_v4()"), nullable=False),
+            sa.Column("id", models.types.StringUUID(), server_default=sa.text("uuidv4()"), nullable=False),
             sa.Column("created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
             sa.Column("updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False),
             sa.Column("app_id", models.types.StringUUID(), nullable=False),

@@ -27,7 +27,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('tool_label_bindings',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tool_id', sa.String(length=64), nullable=False),
         sa.Column('tool_type', sa.String(length=40), nullable=False),
         sa.Column('label_name', sa.String(length=40), nullable=False),

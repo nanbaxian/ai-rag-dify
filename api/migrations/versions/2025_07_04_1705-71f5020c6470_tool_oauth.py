@@ -27,7 +27,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('tool_oauth_system_clients',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('plugin_id', sa.String(length=512), nullable=False),
         sa.Column('provider', sa.String(length=255), nullable=False),
         sa.Column('encrypted_oauth_params', sa.Text(), nullable=False),
@@ -45,7 +45,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('tool_oauth_tenant_clients',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', models.types.StringUUID(), nullable=False),
         sa.Column('plugin_id', sa.String(length=512), nullable=False),
         sa.Column('provider', sa.String(length=255), nullable=False),

@@ -40,7 +40,7 @@ def downgrade():
     if _is_pg(conn):
         op.create_table(
             'tracing_app_configs',
-            sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+            sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
             sa.Column('app_id', postgresql.UUID(), nullable=False),
             sa.Column('tracing_provider', sa.String(length=255), nullable=True),
             sa.Column('tracing_config', postgresql.JSON(astext_type=sa.Text()), nullable=True),

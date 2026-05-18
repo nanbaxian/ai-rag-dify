@@ -28,7 +28,7 @@ def upgrade():
     if _is_pg(conn):
         # PostgreSQL: Keep original syntax
         op.create_table('tool_workflow_providers',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('name', sa.String(length=40), nullable=False),
         sa.Column('icon', sa.String(length=255), nullable=False),
         sa.Column('app_id', models.types.StringUUID(), nullable=False),

@@ -27,7 +27,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('app_mcp_servers',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', models.types.StringUUID(), nullable=False),
         sa.Column('app_id', models.types.StringUUID(), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
@@ -59,7 +59,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('tool_mcp_providers',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('name', sa.String(length=40), nullable=False),
         sa.Column('server_identifier', sa.String(length=24), nullable=False),
         sa.Column('server_url', sa.Text(), nullable=False),

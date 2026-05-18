@@ -28,7 +28,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('dataset_retriever_resources',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('message_id', postgresql.UUID(), nullable=False),
         sa.Column('position', sa.Integer(), nullable=False),
         sa.Column('dataset_id', postgresql.UUID(), nullable=False),

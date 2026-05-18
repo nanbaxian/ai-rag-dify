@@ -27,7 +27,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('tidb_auth_bindings',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', models.types.StringUUID(), nullable=True),
         sa.Column('cluster_id', sa.String(length=255), nullable=False),
         sa.Column('cluster_name', sa.String(length=255), nullable=False),

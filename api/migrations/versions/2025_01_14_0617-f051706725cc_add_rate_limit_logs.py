@@ -27,7 +27,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('rate_limit_logs',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', models.types.StringUUID(), nullable=False),
         sa.Column('subscription_plan', sa.String(length=255), nullable=False),
         sa.Column('operation', sa.String(length=255), nullable=False),

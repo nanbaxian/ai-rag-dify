@@ -27,7 +27,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('tracing_app_configs',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', models.types.StringUUID(), nullable=False),
         sa.Column('tracing_provider', sa.String(length=255), nullable=True),
         sa.Column('tracing_config', sa.JSON(), nullable=True), 

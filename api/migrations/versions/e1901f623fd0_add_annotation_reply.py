@@ -28,7 +28,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('app_annotation_hit_histories',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('annotation_id', postgresql.UUID(), nullable=False),
         sa.Column('source', sa.Text(), nullable=False),

@@ -28,7 +28,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('tool_providers',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('tool_name', sa.String(length=40), nullable=False),
         sa.Column('encrypted_credentials', sa.Text(), nullable=True),

@@ -28,7 +28,7 @@ def upgrade():
     
     if _is_pg(conn):
         op.create_table('tag_bindings',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=True),
         sa.Column('tag_id', postgresql.UUID(), nullable=True),
         sa.Column('target_id', postgresql.UUID(), nullable=True),
@@ -53,7 +53,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('tags',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=True),
         sa.Column('type', sa.String(length=16), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),

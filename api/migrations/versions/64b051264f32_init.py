@@ -27,13 +27,8 @@ def upgrade():
     conn = op.get_bind()
     
     if _is_pg(conn):
-        op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
-    else:
-        pass
-
-    if _is_pg(conn):
         op.create_table('account_integrates',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('account_id', postgresql.UUID(), nullable=False),
         sa.Column('provider', sa.String(length=16), nullable=False),
         sa.Column('open_id', sa.String(length=255), nullable=False),
@@ -59,7 +54,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('accounts',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('email', sa.String(length=255), nullable=False),
         sa.Column('password', sa.String(length=255), nullable=True),
@@ -100,7 +95,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('api_requests',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('api_token_id', postgresql.UUID(), nullable=False),
         sa.Column('path', sa.String(length=255), nullable=False),
@@ -127,7 +122,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('api_tokens',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=True),
         sa.Column('dataset_id', postgresql.UUID(), nullable=True),
         sa.Column('type', sa.String(length=16), nullable=False),
@@ -153,7 +148,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('app_dataset_joins',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('dataset_id', postgresql.UUID(), nullable=False),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
@@ -172,7 +167,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('app_model_configs',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('provider', sa.String(length=255), nullable=False),
         sa.Column('model_id', sa.String(length=255), nullable=False),
@@ -213,7 +208,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('apps',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('mode', sa.String(length=255), nullable=False),
@@ -316,7 +311,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('conversations',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('app_model_config_id', postgresql.UUID(), nullable=False),
         sa.Column('model_provider', sa.String(length=255), nullable=False),
@@ -369,7 +364,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('dataset_keyword_tables',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('dataset_id', postgresql.UUID(), nullable=False),
         sa.Column('keyword_table', sa.Text(), nullable=False),
         sa.PrimaryKeyConstraint('id', name='dataset_keyword_table_pkey'),
@@ -388,7 +383,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('dataset_process_rules',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('dataset_id', postgresql.UUID(), nullable=False),
         sa.Column('mode', sa.String(length=255), server_default=sa.text("'automatic'::character varying"), nullable=False),
         sa.Column('rules', sa.Text(), nullable=True),
@@ -411,7 +406,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('dataset_queries',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('dataset_id', postgresql.UUID(), nullable=False),
         sa.Column('content', sa.Text(), nullable=False),
         sa.Column('source', sa.String(length=255), nullable=False),
@@ -438,7 +433,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('datasets',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
@@ -487,7 +482,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('document_segments',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('dataset_id', postgresql.UUID(), nullable=False),
         sa.Column('document_id', postgresql.UUID(), nullable=False),
@@ -546,7 +541,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('documents',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('dataset_id', postgresql.UUID(), nullable=False),
         sa.Column('position', sa.Integer(), nullable=False),
@@ -634,7 +629,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('embeddings',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('hash', sa.String(length=64), nullable=False),
         sa.Column('embedding', sa.LargeBinary(), nullable=False),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP(0)'), nullable=False),
@@ -652,7 +647,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('end_users',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=True),
         sa.Column('type', sa.String(length=255), nullable=False),
@@ -684,7 +679,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('installed_apps',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('app_owner_tenant_id', postgresql.UUID(), nullable=False),
@@ -744,7 +739,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('message_agent_thoughts',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('message_id', postgresql.UUID(), nullable=False),
         sa.Column('message_chain_id', postgresql.UUID(), nullable=False),
         sa.Column('position', sa.Integer(), nullable=False),
@@ -800,7 +795,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('message_chains',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('message_id', postgresql.UUID(), nullable=False),
         sa.Column('type', sa.String(length=255), nullable=False),
         sa.Column('input', sa.Text(), nullable=True),
@@ -823,7 +818,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('message_feedbacks',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('conversation_id', postgresql.UUID(), nullable=False),
         sa.Column('message_id', postgresql.UUID(), nullable=False),
@@ -858,7 +853,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('operation_logs',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('account_id', postgresql.UUID(), nullable=False),
         sa.Column('action', sa.String(length=255), nullable=False),
@@ -885,7 +880,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('pinned_conversations',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('conversation_id', postgresql.UUID(), nullable=False),
         sa.Column('created_by', postgresql.UUID(), nullable=False),
@@ -906,7 +901,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('providers',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('provider_name', sa.String(length=40), nullable=False),
         sa.Column('provider_type', sa.String(length=40), nullable=False, server_default=sa.text("'custom'::character varying")),
@@ -943,7 +938,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('recommended_apps',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('description', sa.JSON(), nullable=False),
         sa.Column('copyright', sa.String(length=255), nullable=False),
@@ -977,7 +972,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('saved_messages',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('message_id', postgresql.UUID(), nullable=False),
         sa.Column('created_by', postgresql.UUID(), nullable=False),
@@ -1016,7 +1011,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('sites',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('title', sa.String(length=255), nullable=False),
         sa.Column('icon', sa.String(length=255), nullable=True),
@@ -1060,7 +1055,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('tenant_account_joins',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('account_id', postgresql.UUID(), nullable=False),
         sa.Column('role', sa.String(length=16), server_default='normal', nullable=False),
@@ -1088,7 +1083,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('tenants',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=False),
         sa.Column('encrypt_public_key', sa.Text(), nullable=True),
         sa.Column('plan', sa.String(length=255), server_default=sa.text("'basic'::character varying"), nullable=False),
@@ -1110,7 +1105,7 @@ def upgrade():
         )
     if _is_pg(conn):
         op.create_table('upload_files',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=False),
         sa.Column('storage_type', sa.String(length=255), nullable=False),
         sa.Column('key', sa.String(length=255), nullable=False),
@@ -1149,7 +1144,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('message_annotations',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('conversation_id', postgresql.UUID(), nullable=False),
         sa.Column('message_id', postgresql.UUID(), nullable=False),
@@ -1178,7 +1173,7 @@ def upgrade():
 
     if _is_pg(conn):
         op.create_table('messages',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('model_provider', sa.String(length=255), nullable=False),
         sa.Column('model_id', sa.String(length=255), nullable=False),
@@ -1392,9 +1387,4 @@ def downgrade():
     op.drop_table('accounts')
     op.drop_table('account_integrates')
 
-    conn = op.get_bind()
-    if _is_pg(conn):
-        op.execute('DROP EXTENSION IF EXISTS "uuid-ossp";')
-    else:
-        pass
     # ### end Alembic commands ###

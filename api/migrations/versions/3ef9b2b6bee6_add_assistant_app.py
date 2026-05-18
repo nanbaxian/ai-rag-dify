@@ -29,7 +29,7 @@ def upgrade():
     if _is_pg(conn):
         # PostgreSQL: Keep original syntax
         op.create_table('tool_api_providers',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('name', sa.String(length=40), nullable=False),
         sa.Column('schema', sa.Text(), nullable=False),
         sa.Column('schema_type_str', sa.String(length=40), nullable=False),
@@ -55,7 +55,7 @@ def upgrade():
     if _is_pg(conn):
         # PostgreSQL: Keep original syntax
         op.create_table('tool_builtin_providers',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', postgresql.UUID(), nullable=True),
         sa.Column('user_id', postgresql.UUID(), nullable=False),
         sa.Column('provider', sa.String(length=40), nullable=False),
@@ -81,7 +81,7 @@ def upgrade():
     if _is_pg(conn):
         # PostgreSQL: Keep original syntax
         op.create_table('tool_published_apps',
-        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', postgresql.UUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('app_id', postgresql.UUID(), nullable=False),
         sa.Column('user_id', postgresql.UUID(), nullable=False),
         sa.Column('description', sa.Text(), nullable=False),

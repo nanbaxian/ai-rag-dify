@@ -28,7 +28,7 @@ def upgrade():
     if _is_pg(conn):
         # PostgreSQL: Keep original syntax
         op.create_table('data_source_api_key_auth_bindings',
-        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+        sa.Column('id', models.types.StringUUID(), server_default=sa.text('uuidv4()'), nullable=False),
         sa.Column('tenant_id', models.types.StringUUID(), nullable=False),
         sa.Column('category', sa.String(length=255), nullable=False),
         sa.Column('provider', sa.String(length=255), nullable=False),
