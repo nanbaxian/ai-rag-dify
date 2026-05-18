@@ -111,7 +111,7 @@ const createCollectionInfo = (
   total: Object.keys(icons).length,
   version,
   author: {
-    name: 'LangGenius, Inc.',
+    name: 'FlashCoding Tech Inc.',
     url: 'https://github.com/langgenius/dify',
   },
   license: {
