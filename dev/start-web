@@ -37,4 +37,5 @@ if [[ "$MODE" == "foreground" ]]; then
   exec bash -lc "$WEB_COMMAND"
 fi
 
+service_kill_port 3002 || true
 service_start_background_shell "web" "$WEB_DIR" "$WEB_COMMAND"
