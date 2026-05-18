@@ -62,6 +62,7 @@ pnpm -C web run dev:proxy
 ```
 
 Open <http://localhost:3002> with your browser to see the result.
+This repository's `dev/start-web` script also defaults to port `3002` when run from the repo root.
 
 You can start editing the files under `web/app`.
 The page auto-updates as you edit the file.

@@ -22,21 +22,11 @@ The scripts resolve paths relative to their location, so you can run them from a
 
 1. Review `api/.env`, `web/.env.local`, and `docker/middleware.env` values (see the `SECRET_KEY` note below).
 
-1. Start middleware (PostgreSQL/Redis/Weaviate).
-
-   ```bash
-   ./dev/start-docker-compose
-   ```
-
-1. Start backend (runs migrations first).
+1. Start backend first, then worker, then web. These scripts run in the background by default.
 
    ```bash
    ./dev/start-api
-   ```
-
-1. Start Dify [web](../web) service.
-
-   ```bash
+   ./dev/start-worker
    ./dev/start-web
    ```
 
@@ -44,16 +34,16 @@ The scripts resolve paths relative to their location, so you can run them from a
 
 1. Set up your application by visiting `http://localhost:3002`.
 
-1. Start the worker service (async and scheduler tasks, runs from `api`).
-
-   ```bash
-   ./dev/start-worker
-   ```
-
 1. Optional: start Celery Beat (scheduled tasks).
 
    ```bash
    ./dev/start-beat
+   ```
+
+1. If you are still using Docker middleware locally, start middleware separately.
+
+   ```bash
+   ./dev/start-docker-compose
    ```
 
 ### Environment notes
