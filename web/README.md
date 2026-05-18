@@ -61,7 +61,7 @@ pnpm -C web run dev:vinext
 pnpm -C web run dev:proxy
 ```
 
-Open <http://localhost:3000> with your browser to see the result.
+Open <http://localhost:3002> with your browser to see the result.
 
 You can start editing the files under `web/app`.
 The page auto-updates as you edit the file.
@@ -91,7 +91,7 @@ docker build -f web/Dockerfile -t dify-web .
 If you want to customize the host and port:
 
 ```bash
-pnpm -C web run start --port=3001 --host=0.0.0.0
+pnpm -C web run start --port=3002 --host=0.0.0.0
 ```
 
 ## Storybook

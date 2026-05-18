@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 WEB_DIR="$ROOT_DIR/web"
-WEB_COMMAND="pnpm --dir ${WEB_DIR} start"
+WEB_COMMAND="PORT=3002 pnpm --dir ${WEB_DIR} start"
 
 if [[ "$MODE" == "foreground" ]]; then
   exec bash -lc "$WEB_COMMAND"

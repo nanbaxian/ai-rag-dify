@@ -46,7 +46,7 @@
 
 4. `./dev/start-web`
    - 运行前端
-   - 默认访问 `http://localhost:3000`
+   - 默认访问 `http://localhost:3002`
 
 5. `./dev/start-worker`
    - 启动 Celery worker
@@ -202,13 +202,13 @@ pnpm build
 pnpm start
 ```
 
-默认前端服务跑在 `3000`。
+默认前端服务跑在 `3002`。
 
 ### 3.9 宝塔 Nginx 反代
 
 宝塔里把域名反代到你的前端和后端：
 
-- 前端：`http://127.0.0.1:3000`
+- 前端：`http://127.0.0.1:3002`
 - 后端：`http://127.0.0.1:5001`
 
 如果你想只暴露一个域名，常见做法是：
@@ -286,7 +286,7 @@ uv run dev/generate_swagger_markdown_docs.py --swagger-dir openapi --markdown-di
 
 访问：
 
-- 前端：`http://localhost:3000`
+- 前端：`http://localhost:3002`
 - 后端：`http://localhost:5001`
 
 ### 宝塔服务器直跑
@@ -314,7 +314,7 @@ pnpm build
 pnpm start
 ```
 
-然后把宝塔 Nginx 反代到 `3000` 和 `5001`。
+然后把宝塔 Nginx 反代到 `3002` 和 `5001`。
 
 ## 6. 注意事项
 
