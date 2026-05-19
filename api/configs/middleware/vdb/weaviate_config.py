@@ -12,6 +12,19 @@ class WeaviateConfig(BaseSettings):
         default=None,
     )
 
+    WEAVIATE_USE_EMBEDDED: bool = Field(
+        description=(
+            "Run an embedded local Weaviate instance from the Python client instead of connecting to a separate "
+            "server. This is intended for Ubuntu server deployments and other Linux environments."
+        ),
+        default=False,
+    )
+
+    WEAVIATE_EMBEDDED_VERSION: str | None = Field(
+        description="Version of the embedded Weaviate binary to start when WEAVIATE_USE_EMBEDDED is enabled.",
+        default=None,
+    )
+
     WEAVIATE_API_KEY: str | None = Field(
         description="API key for authenticating with the Weaviate server",
         default=None,

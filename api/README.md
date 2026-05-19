@@ -77,6 +77,17 @@ For server redeploys and updates, you can run:
   SECRET_KEY=${secret_key}" .env
   ```
 
+### Local Weaviate
+
+The default knowledge-base vector store is Weaviate. For Ubuntu + 宝塔 deployments without Docker:
+
+- On Ubuntu or other Linux servers, you can enable the embedded Weaviate client by setting `WEAVIATE_USE_EMBEDDED=true` in `api/.env`.
+- `WEAVIATE_EMBEDDED_VERSION` can be set to pin the embedded Weaviate binary version, otherwise the client uses its default.
+- When embedded mode is enabled, `WEAVIATE_ENDPOINT` is not required.
+- This is the recommended path for a local Ubuntu server managed by 宝塔.
+
+If you keep the default non-embedded mode, set `WEAVIATE_ENDPOINT` and `WEAVIATE_GRPC_ENDPOINT` to a reachable server instead of the Docker host names from `docker/.env.example`.
+
 ## Testing
 
 1. Install dependencies for both the backend and the test environment

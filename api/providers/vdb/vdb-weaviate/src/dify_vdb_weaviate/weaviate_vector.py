@@ -9,6 +9,7 @@ import atexit
 import datetime
 import json
 import logging
+import platform
 import threading
 import uuid as _uuid
 from typing import Any
@@ -76,6 +77,8 @@ class WeaviateConfig(BaseModel):
     """
 
     endpoint: str
+    use_embedded: bool = False
+    embedded_version: str | None = None
     grpc_endpoint: str | None = None
     api_key: str | None = None
     batch_size: int = 100
@@ -84,7 +87,7 @@ class WeaviateConfig(BaseModel):
     @classmethod
     def validate_config(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Validates that required configuration values are present."""
-        if not values["endpoint"]:
+        if not values.get("use_embedded") and not values.get("endpoint"):
             raise ValueError("config WEAVIATE_ENDPOINT is required")
         return values
 
@@ -116,7 +119,7 @@ class WeaviateVector(BaseVector):
         """
         Initializes and returns a connected Weaviate client.
 
-        Configures both HTTP and gRPC connections with proper authentication.
+        Configures either a local embedded client or a custom HTTP/gRPC connection with proper authentication.
         """
         global _weaviate_client
         if _weaviate_client and _weaviate_client.is_ready():
@@ -125,6 +128,24 @@ class WeaviateVector(BaseVector):
         with _weaviate_client_lock:
             if _weaviate_client and _weaviate_client.is_ready():
                 return _weaviate_client
+
+            if config.use_embedded:
+                if platform.system() == "Windows":
+                    raise RuntimeError(
+                        "Embedded Weaviate is not supported on Windows. "
+                        "Use a reachable WEAVIATE_ENDPOINT or run Weaviate in Docker."
+                    )
+
+                client = weaviate.connect_to_embedded(
+                    version=config.embedded_version or "1.27.0",
+                    environment_variables={"LOG_LEVEL": "error"},
+                )
+
+                if not client.is_ready():
+                    raise ConnectionError("Embedded Weaviate is not ready")
+
+                _weaviate_client = client
+                return client
 
             p = urlparse(config.endpoint)
             host = p.hostname or config.endpoint.replace("https://", "").replace("http://", "")
@@ -524,6 +545,8 @@ class WeaviateVectorFactory(AbstractVectorFactory):
             collection_name=collection_name,
             config=WeaviateConfig(
                 endpoint=dify_config.WEAVIATE_ENDPOINT or "",
+                use_embedded=dify_config.WEAVIATE_USE_EMBEDDED,
+                embedded_version=dify_config.WEAVIATE_EMBEDDED_VERSION,
                 grpc_endpoint=dify_config.WEAVIATE_GRPC_ENDPOINT or "",
                 api_key=dify_config.WEAVIATE_API_KEY,
                 batch_size=dify_config.WEAVIATE_BATCH_SIZE,

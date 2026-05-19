@@ -40,6 +40,12 @@ class TestWeaviateVector(unittest.TestCase):
         with pytest.raises(ValueError, match="config WEAVIATE_ENDPOINT is required"):
             WeaviateConfig(endpoint="")
 
+    def test_config_allows_missing_endpoint_when_embedded(self):
+        config = WeaviateConfig(endpoint="", use_embedded=True)
+
+        assert config.use_embedded is True
+        assert config.endpoint == ""
+
     @patch("dify_vdb_weaviate.weaviate_vector.weaviate")
     def _create_weaviate_vector(self, mock_weaviate_module):
         """Helper to create a WeaviateVector instance with mocked client."""
@@ -121,6 +127,35 @@ class TestWeaviateVector(unittest.TestCase):
             "skip_init_checks": True,
         }
         mock_api_key.assert_called_once_with("test-key")
+
+    @patch("dify_vdb_weaviate.weaviate_vector.platform.system", return_value="Linux")
+    @patch("dify_vdb_weaviate.weaviate_vector.weaviate.connect_to_embedded")
+    def test_init_client_uses_embedded_mode_when_enabled(self, mock_connect_embedded, mock_platform):
+        mock_client = MagicMock()
+        mock_client.is_ready.return_value = True
+        mock_connect_embedded.return_value = mock_client
+
+        wv = WeaviateVector.__new__(WeaviateVector)
+        config = WeaviateConfig(endpoint="", use_embedded=True, embedded_version="1.27.0")
+
+        client = wv._init_client(config)
+
+        assert client is mock_client
+        mock_connect_embedded.assert_called_once_with(
+            version="1.27.0",
+            environment_variables={"LOG_LEVEL": "error"},
+        )
+        mock_platform.assert_called_once()
+
+    @patch("dify_vdb_weaviate.weaviate_vector.platform.system", return_value="Windows")
+    def test_init_client_rejects_embedded_mode_on_windows(self, mock_platform):
+        wv = WeaviateVector.__new__(WeaviateVector)
+        config = WeaviateConfig(endpoint="", use_embedded=True)
+
+        with pytest.raises(RuntimeError, match="Embedded Weaviate is not supported on Windows"):
+            wv._init_client(config)
+
+        mock_platform.assert_called_once()
 
     @patch("dify_vdb_weaviate.weaviate_vector.weaviate.connect_to_custom")
     def test_init_client_raises_when_database_not_ready(self, mock_connect):
