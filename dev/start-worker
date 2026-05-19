@@ -108,10 +108,7 @@ if [[ -n "${ENV_FILE}" ]]; then
 
   ENV_FILE="$(realpath "${ENV_FILE}")"
   echo "Loading environment variables from ${ENV_FILE}"
-  # Export everything sourced from the env file
-  set -a
-  source "${ENV_FILE}"
-  set +a
+  service_load_env_file "${ENV_FILE}"
 fi
 
 cd "$ROOT_DIR/api"

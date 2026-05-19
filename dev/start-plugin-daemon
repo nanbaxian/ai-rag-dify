@@ -70,9 +70,7 @@ fi
 mkdir -p "$PLUGIN_STORAGE_LOCAL_ROOT"
 
 if [[ -f "$ROOT_DIR/api/.env" ]]; then
-  set -a
-  source "$ROOT_DIR/api/.env"
-  set +a
+  service_load_env_file "$ROOT_DIR/api/.env"
 fi
 
 if docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
