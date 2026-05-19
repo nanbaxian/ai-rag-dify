@@ -174,8 +174,18 @@ echo "Clearing frontend build artifacts..."
 rm -rf "$ROOT/web/.next"
 
 echo "Building frontend..."
-cd "$ROOT/web"
-node ./node_modules/next/dist/bin/next build
+(
+  cd "$ROOT/web"
+  node ./node_modules/next/dist/bin/next build
+) &
+FRONTEND_BUILD_PID="$!"
+
+while kill -0 "$FRONTEND_BUILD_PID" 2>/dev/null; do
+  echo "Building frontend... still running at $(date '+%Y-%m-%d %H:%M:%S')"
+  sleep 60
+done
+
+wait "$FRONTEND_BUILD_PID"
 
 cd "$ROOT"
 echo "Restarting services..."
