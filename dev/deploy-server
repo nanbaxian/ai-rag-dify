@@ -36,6 +36,8 @@ DEPLOY_NEXT_PUBLIC_SOCKET_URL="${DEPLOY_NEXT_PUBLIC_SOCKET_URL:-wss://airagapi.f
 DEPLOY_NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS="${DEPLOY_NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS:-60000}"
 DEPLOY_WEAVIATE_USE_EMBEDDED="${DEPLOY_WEAVIATE_USE_EMBEDDED:-true}"
 DEPLOY_WEAVIATE_EMBEDDED_VERSION="${DEPLOY_WEAVIATE_EMBEDDED_VERSION:-1.27.0}"
+DEPLOY_WEB_BUILD_MODE="${DEPLOY_WEB_BUILD_MODE:-webpack}"
+DEPLOY_WEB_BUILD_HEAP_MB="${DEPLOY_WEB_BUILD_HEAP_MB:-2048}"
 
 ensure_env_file() {
   local env_file="$1"
@@ -177,19 +179,38 @@ echo "Stopping web before rebuild..."
 echo "Clearing frontend build artifacts..."
 rm -rf "$ROOT/web/.next"
 
-echo "Building frontend..."
-(
-  cd "$ROOT/web"
-  node ./node_modules/next/dist/bin/next build
-) &
-FRONTEND_BUILD_PID="$!"
+if [[ "$DEPLOY_WEB_BUILD_MODE" == "skip" ]]; then
+  echo "Skipping frontend build because DEPLOY_WEB_BUILD_MODE=skip."
+else
+  echo "Building frontend with mode: $DEPLOY_WEB_BUILD_MODE"
+  WEB_BUILD_COMMAND=(
+    env
+    NODE_OPTIONS="--max-old-space-size=${DEPLOY_WEB_BUILD_HEAP_MB}"
+    node
+    ./node_modules/next/dist/bin/next
+    build
+  )
+  if [[ "$DEPLOY_WEB_BUILD_MODE" == "webpack" ]]; then
+    WEB_BUILD_COMMAND+=(--webpack)
+  elif [[ "$DEPLOY_WEB_BUILD_MODE" != "turbopack" ]]; then
+    echo "Unknown DEPLOY_WEB_BUILD_MODE: $DEPLOY_WEB_BUILD_MODE"
+    echo "Supported values: webpack, turbopack, skip"
+    exit 1
+  fi
 
-while kill -0 "$FRONTEND_BUILD_PID" 2>/dev/null; do
-  echo "Building frontend... still running at $(date '+%Y-%m-%d %H:%M:%S')"
-  sleep 60
-done
+  (
+    cd "$ROOT/web"
+    "${WEB_BUILD_COMMAND[@]}"
+  ) &
+  FRONTEND_BUILD_PID="$!"
 
-wait "$FRONTEND_BUILD_PID"
+  while kill -0 "$FRONTEND_BUILD_PID" 2>/dev/null; do
+    echo "Building frontend... still running at $(date '+%Y-%m-%d %H:%M:%S')"
+    sleep 60
+  done
+
+  wait "$FRONTEND_BUILD_PID"
+fi
 
 cd "$ROOT"
 echo "Restarting services..."
