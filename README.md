@@ -88,11 +88,13 @@ If you are running from source code without Docker, use the repo scripts in this
 cd /path/to/ai-rag-dify
 ./dev/setup
 ./dev/start-api
+./dev/start-plugin-daemon
 ./dev/start-worker
 ./dev/start-web
 ```
 
 - API listens on `http://127.0.0.1:5001`
+- Plugin daemon listens on `http://127.0.0.1:5002`
 - Web listens on `http://127.0.0.1:3002`
 - The web UI is set up by visiting `http://localhost:3002`
 
@@ -102,7 +104,7 @@ For server updates, use:
 ./dev/deploy-server
 ```
 
-Note: `./dev/deploy-server` expects your `origin` remote to use SSH, not HTTPS, so it can run without interactive GitHub prompts.
+Note: `./dev/deploy-server` expects your `origin` remote to use SSH, not HTTPS, so it can run without interactive GitHub prompts. It also starts the plugin daemon automatically.
 
 #### Seeking help
 

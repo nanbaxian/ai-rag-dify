@@ -156,3 +156,32 @@ service_start_background_shell() {
   echo "$service_name started in background (pid $(cat "$pid_file"))."
   echo "Log: $log_file"
 }
+
+service_start_background_docker() {
+  local service_name="$1"
+  local container_name="$2"
+  local run_command="$3"
+  local log_file
+
+  service_ensure_dirs
+  log_file="$(service_log_file "$service_name")"
+
+  if command -v docker >/dev/null 2>&1 && docker inspect "$container_name" >/dev/null 2>&1; then
+    if docker inspect -f '{{.State.Running}}' "$container_name" 2>/dev/null | grep -q true; then
+      echo "$service_name is already running (container $container_name)."
+      echo "Log: $log_file"
+      return 0
+    fi
+    docker rm -f "$container_name" >/dev/null 2>&1 || true
+  fi
+
+  mkdir -p "$LOG_DIR"
+  (
+    cd "$ROOT_DIR"
+    nohup bash -lc "$run_command" >>"$log_file" 2>&1 < /dev/null &
+    printf '%s\n' "$!" > "$RUNTIME_DIR/${service_name}.pid"
+  )
+
+  echo "$service_name started in background (pid $(cat "$RUNTIME_DIR/${service_name}.pid"))."
+  echo "Log: $log_file"
+}

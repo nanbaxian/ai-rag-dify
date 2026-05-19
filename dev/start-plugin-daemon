@@ -1,0 +1,187 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+source "$SCRIPT_DIR/_service_control.sh"
+
+MODE="background"
+CONTAINER_NAME="dify-plugin-daemon"
+IMAGE_NAME="langgenius/dify-plugin-daemon:0.6.0-local"
+PLUGIN_PORT="${PLUGIN_PORT:-5002}"
+PLUGIN_DB_NAME="${PLUGIN_DB_NAME:-dify_plugin}"
+PLUGIN_DB_HOST="${PLUGIN_DB_HOST:-127.0.0.1}"
+PLUGIN_DB_PORT="${PLUGIN_DB_PORT:-5432}"
+PLUGIN_DB_USERNAME="${PLUGIN_DB_USERNAME:-postgres}"
+PLUGIN_DB_PASSWORD="${PLUGIN_DB_PASSWORD:-difyai123456}"
+PLUGIN_REDIS_HOST="${PLUGIN_REDIS_HOST:-127.0.0.1}"
+PLUGIN_REDIS_PORT="${PLUGIN_REDIS_PORT:-6379}"
+PLUGIN_REDIS_PASSWORD="${PLUGIN_REDIS_PASSWORD:-}"
+PLUGIN_SERVER_KEY="${PLUGIN_SERVER_KEY:-lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi}"
+PLUGIN_DIFY_INNER_API_URL="${PLUGIN_DIFY_INNER_API_URL:-http://127.0.0.1:5001}"
+PLUGIN_DIFY_INNER_API_KEY="${PLUGIN_DIFY_INNER_API_KEY:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}"
+PLUGIN_STORAGE_LOCAL_ROOT="${PLUGIN_STORAGE_LOCAL_ROOT:-$ROOT_DIR/var/plugin_daemon}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --foreground)
+      MODE="foreground"
+      shift
+      ;;
+    --status)
+      if command -v docker >/dev/null 2>&1 && docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+        if docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null | grep -q true; then
+          echo "plugin-daemon is running (container $CONTAINER_NAME)."
+          echo "Log: $LOG_DIR/plugin-daemon.log"
+        else
+          echo "plugin-daemon is not running."
+          echo "Log: $LOG_DIR/plugin-daemon.log"
+        fi
+      else
+        echo "plugin-daemon is not running."
+        echo "Log: $LOG_DIR/plugin-daemon.log"
+      fi
+      exit 0
+      ;;
+    --stop)
+      if command -v docker >/dev/null 2>&1 && docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+        docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+        echo "plugin-daemon stopped."
+      else
+        echo "plugin-daemon is not running."
+      fi
+      rm -f "$RUNTIME_DIR/plugin-daemon.pid" 2>/dev/null || true
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Usage: $0 [--foreground|--status|--stop]"
+      exit 1
+      ;;
+  esac
+done
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "docker is not installed or not on PATH."
+  exit 1
+fi
+
+mkdir -p "$PLUGIN_STORAGE_LOCAL_ROOT"
+
+if [[ -f "$ROOT_DIR/api/.env" ]]; then
+  set -a
+  source "$ROOT_DIR/api/.env"
+  set +a
+fi
+
+if docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+  if docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null | grep -q true; then
+    echo "plugin-daemon is already running (container $CONTAINER_NAME)."
+    echo "Log: docker logs -f $CONTAINER_NAME"
+    exit 0
+  fi
+  docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+fi
+
+if [[ -f "$ROOT_DIR/api/.env" ]] && command -v uv >/dev/null 2>&1; then
+  echo "Ensuring plugin database exists..."
+  uv run --project "$ROOT_DIR/api" python - "$PLUGIN_DB_NAME" "$PLUGIN_DB_HOST" "$PLUGIN_DB_PORT" "$PLUGIN_DB_USERNAME" "$PLUGIN_DB_PASSWORD" <<'PY'
+import sys
+
+import psycopg2
+
+db_name, db_host, db_port, db_username, db_password = sys.argv[1:]
+
+with psycopg2.connect(
+    host=db_host,
+    port=db_port,
+    user=db_username,
+    password=db_password,
+    dbname="postgres",
+) as conn:
+    conn.autocommit = True
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
+        if cursor.fetchone() is None:
+            cursor.execute(f'CREATE DATABASE "{db_name}"')
+PY
+fi
+
+service_kill_port "$PLUGIN_PORT" || true
+
+DOCKER_COMMAND=(
+  docker run
+  --detach
+  --name "$CONTAINER_NAME"
+  --restart always
+  --network host
+  -e SERVER_HOST=0.0.0.0
+  -e SERVER_PORT="$PLUGIN_PORT"
+  -e SERVER_KEY="$PLUGIN_SERVER_KEY"
+  -e GIN_MODE=release
+  -e PLATFORM=local
+  -e DIFY_INNER_API_URL="$PLUGIN_DIFY_INNER_API_URL"
+  -e DIFY_INNER_API_KEY="$PLUGIN_DIFY_INNER_API_KEY"
+  -e PLUGIN_REMOTE_INSTALLING_ENABLED=true
+  -e PLUGIN_REMOTE_INSTALLING_HOST=127.0.0.1
+  -e PLUGIN_REMOTE_INSTALLING_PORT=5003
+  -e DB_TYPE=postgresql
+  -e DB_USERNAME="$PLUGIN_DB_USERNAME"
+  -e DB_PASSWORD="$PLUGIN_DB_PASSWORD"
+  -e DB_HOST="$PLUGIN_DB_HOST"
+  -e DB_PORT="$PLUGIN_DB_PORT"
+  -e DB_DATABASE="$PLUGIN_DB_NAME"
+  -e REDIS_HOST="$PLUGIN_REDIS_HOST"
+  -e REDIS_PORT="$PLUGIN_REDIS_PORT"
+  -e REDIS_PASSWORD="$PLUGIN_REDIS_PASSWORD"
+  -e PLUGIN_STORAGE_TYPE=local
+  -e PLUGIN_STORAGE_LOCAL_ROOT=/app/storage
+  -e PLUGIN_INSTALLED_PATH=plugin
+  -e PLUGIN_WORKING_PATH=/app/storage/cwd
+  -e PLUGIN_MAX_PACKAGE_SIZE=15728640
+  -e PLUGIN_PYTHON_ENV_INIT_TIMEOUT=120
+  -e PLUGIN_MAX_EXECUTION_TIMEOUT=600
+  -v "$PLUGIN_STORAGE_LOCAL_ROOT:/app/storage"
+  "$IMAGE_NAME"
+)
+
+if [[ "$MODE" == "foreground" ]]; then
+  exec docker run \
+    --rm \
+    --name "$CONTAINER_NAME" \
+    --network host \
+    -e SERVER_HOST=0.0.0.0 \
+    -e SERVER_PORT="$PLUGIN_PORT" \
+    -e SERVER_KEY="$PLUGIN_SERVER_KEY" \
+    -e GIN_MODE=release \
+    -e PLATFORM=local \
+    -e DIFY_INNER_API_URL="$PLUGIN_DIFY_INNER_API_URL" \
+    -e DIFY_INNER_API_KEY="$PLUGIN_DIFY_INNER_API_KEY" \
+    -e PLUGIN_REMOTE_INSTALLING_ENABLED=true \
+    -e PLUGIN_REMOTE_INSTALLING_HOST=127.0.0.1 \
+    -e PLUGIN_REMOTE_INSTALLING_PORT=5003 \
+    -e DB_TYPE=postgresql \
+    -e DB_USERNAME="$PLUGIN_DB_USERNAME" \
+    -e DB_PASSWORD="$PLUGIN_DB_PASSWORD" \
+    -e DB_HOST="$PLUGIN_DB_HOST" \
+    -e DB_PORT="$PLUGIN_DB_PORT" \
+    -e DB_DATABASE="$PLUGIN_DB_NAME" \
+    -e REDIS_HOST="$PLUGIN_REDIS_HOST" \
+    -e REDIS_PORT="$PLUGIN_REDIS_PORT" \
+    -e REDIS_PASSWORD="$PLUGIN_REDIS_PASSWORD" \
+    -e PLUGIN_STORAGE_TYPE=local \
+    -e PLUGIN_STORAGE_LOCAL_ROOT=/app/storage \
+    -e PLUGIN_INSTALLED_PATH=plugin \
+    -e PLUGIN_WORKING_PATH=/app/storage/cwd \
+    -e PLUGIN_MAX_PACKAGE_SIZE=15728640 \
+    -e PLUGIN_PYTHON_ENV_INIT_TIMEOUT=120 \
+    -e PLUGIN_MAX_EXECUTION_TIMEOUT=600 \
+    -v "$PLUGIN_STORAGE_LOCAL_ROOT:/app/storage" \
+    "$IMAGE_NAME"
+fi
+
+docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+container_id="$("${DOCKER_COMMAND[@]}")"
+echo "plugin-daemon started in background (container ${container_id:0:12})."
+echo "Log: docker logs -f $CONTAINER_NAME"

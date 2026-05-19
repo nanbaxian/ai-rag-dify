@@ -31,5 +31,6 @@ chmod +x \
   "$ROOT/dev/start-api" \
   "$ROOT/dev/start-worker" \
   "$ROOT/dev/start-web" \
+  "$ROOT/dev/start-plugin-daemon" \
   "$ROOT/dev/deploy-server" \
   "$ROOT/dev/_service_control.sh"

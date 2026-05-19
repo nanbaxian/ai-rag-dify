@@ -20,17 +20,18 @@ The scripts resolve paths relative to their location, so you can run them from a
    ./dev/setup
    ```
 
-1. Review `api/.env`, `web/.env.local`, and `docker/middleware.env` values (see the `SECRET_KEY` note below).
+1. Review `api/.env`, `web/.env.local`, and `docker/middleware.env` values (see the `SECRET_KEY` note below). If you use plugin features, make sure the plugin daemon settings in `api/.env` are also present.
 
-1. Start backend first, then worker, then web. These scripts run in the background by default.
+1. Start backend first, then the plugin daemon, then worker, then web. These scripts run in the background by default.
 
    ```bash
    ./dev/start-api
+   ./dev/start-plugin-daemon
    ./dev/start-worker
    ./dev/start-web
    ```
 
-   `./dev/setup` and `./dev/start-web` install JavaScript dependencies through the repository root workspace, so you do not need a separate `cd web && pnpm install` step.
+   `./dev/setup` and `./dev/start-web` install JavaScript dependencies through the repository root workspace, so you do not need a separate `cd web && pnpm install` step. `./dev/start-plugin-daemon` starts the plugin runtime container on `http://127.0.0.1:5002`.
 
 1. Set up your application by visiting `http://localhost:3002`.
 
@@ -39,6 +40,8 @@ For server redeploys and updates, you can run:
 ```bash
 ./dev/deploy-server
 ```
+
+`./dev/deploy-server` updates the source tree, syncs env files, rebuilds the frontend, and restarts `api`, `plugin-daemon`, `worker`, and `web`.
 
 1. Optional: start Celery Beat (scheduled tasks).
 

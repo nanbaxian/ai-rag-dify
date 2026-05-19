@@ -18,8 +18,9 @@
 ./dev/setup
 ./dev/start-docker-compose
 ./dev/start-api
-./dev/start-web
+./dev/start-plugin-daemon
 ./dev/start-worker
+./dev/start-web
 ```
 
 可选：
@@ -44,13 +45,17 @@
    - 会先执行数据库迁移
    - 默认端口是 `5001`
 
-4. `./dev/start-web`
-   - 运行前端
-   - 默认访问 `http://localhost:3002`
+4. `./dev/start-plugin-daemon`
+   - 运行 plugin daemon
+   - 默认端口是 `5002`
 
 5. `./dev/start-worker`
    - 启动 Celery worker
    - 负责异步任务、索引、调度、队列任务
+
+6. `./dev/start-web`
+   - 运行前端
+   - 默认访问 `http://localhost:3002`
 
 ### 2.3 本地运行前要改的关键变量
 
@@ -280,8 +285,9 @@ uv run dev/generate_swagger_markdown_docs.py --swagger-dir openapi --markdown-di
 ./dev/setup
 ./dev/start-docker-compose
 ./dev/start-api
-./dev/start-web
+./dev/start-plugin-daemon
 ./dev/start-worker
+./dev/start-web
 ```
 
 访问：

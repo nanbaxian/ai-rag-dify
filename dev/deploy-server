@@ -13,10 +13,20 @@ DEPLOY_TRIGGER_URL="${DEPLOY_TRIGGER_URL:-https://airagapi.flashcoding.ca}"
 DEPLOY_COOKIE_DOMAIN="${DEPLOY_COOKIE_DOMAIN:-flashcoding.ca}"
 DEPLOY_CONSOLE_CORS_ALLOW_ORIGINS="${DEPLOY_CONSOLE_CORS_ALLOW_ORIGINS:-https://airagfront.flashcoding.ca}"
 DEPLOY_WEB_API_CORS_ALLOW_ORIGINS="${DEPLOY_WEB_API_CORS_ALLOW_ORIGINS:-https://airagfront.flashcoding.ca}"
+DEPLOY_DB_USERNAME="${DEPLOY_DB_USERNAME:-postgres}"
+DEPLOY_DB_PASSWORD="${DEPLOY_DB_PASSWORD:-difyai123456}"
+DEPLOY_DB_HOST="${DEPLOY_DB_HOST:-localhost}"
+DEPLOY_DB_PORT="${DEPLOY_DB_PORT:-5432}"
 DEPLOY_DB_DATABASE="${DEPLOY_DB_DATABASE:-ai_rag_dify}"
+DEPLOY_PLUGIN_DATABASE="${DEPLOY_PLUGIN_DATABASE:-dify_plugin}"
 DEPLOY_REDIS_USERNAME="${DEPLOY_REDIS_USERNAME:-}"
 DEPLOY_REDIS_PASSWORD="${DEPLOY_REDIS_PASSWORD:-}"
 DEPLOY_CELERY_BROKER_URL="${DEPLOY_CELERY_BROKER_URL:-redis://localhost:6379/1}"
+DEPLOY_PLUGIN_DAEMON_KEY="${DEPLOY_PLUGIN_DAEMON_KEY:-lYkiYYT6owG+71oLerGzA7GXCgOT++6ovaezWAjpCjf+Sjc3ZtU+qUEi}"
+DEPLOY_PLUGIN_DAEMON_URL="${DEPLOY_PLUGIN_DAEMON_URL:-http://127.0.0.1:5002}"
+DEPLOY_PLUGIN_REMOTE_INSTALL_HOST="${DEPLOY_PLUGIN_REMOTE_INSTALL_HOST:-127.0.0.1}"
+DEPLOY_PLUGIN_REMOTE_INSTALL_PORT="${DEPLOY_PLUGIN_REMOTE_INSTALL_PORT:-5003}"
+DEPLOY_INNER_API_KEY_FOR_PLUGIN="${DEPLOY_INNER_API_KEY_FOR_PLUGIN:-QaHbTe77CtuXmsfyhR7+vRjI/+XbV1AaFy691iy+kGDv2Jvy0/eAh8Y1}"
 DEPLOY_NEXT_PUBLIC_DEPLOY_ENV="${DEPLOY_NEXT_PUBLIC_DEPLOY_ENV:-PRODUCTION}"
 DEPLOY_NEXT_PUBLIC_EDITION="${DEPLOY_NEXT_PUBLIC_EDITION:-SELF_HOSTED}"
 DEPLOY_NEXT_PUBLIC_API_PREFIX="${DEPLOY_NEXT_PUBLIC_API_PREFIX:-https://airagapi.flashcoding.ca/console/api}"
@@ -85,10 +95,19 @@ ensure_env_file \
   "COOKIE_DOMAIN=${DEPLOY_COOKIE_DOMAIN}" \
   "CONSOLE_CORS_ALLOW_ORIGINS=${DEPLOY_CONSOLE_CORS_ALLOW_ORIGINS}" \
   "WEB_API_CORS_ALLOW_ORIGINS=${DEPLOY_WEB_API_CORS_ALLOW_ORIGINS}" \
+  "DB_USERNAME=${DEPLOY_DB_USERNAME}" \
+  "DB_PASSWORD=${DEPLOY_DB_PASSWORD}" \
+  "DB_HOST=${DEPLOY_DB_HOST}" \
+  "DB_PORT=${DEPLOY_DB_PORT}" \
   "DB_DATABASE=${DEPLOY_DB_DATABASE}" \
   "REDIS_USERNAME=${DEPLOY_REDIS_USERNAME}" \
   "REDIS_PASSWORD=${DEPLOY_REDIS_PASSWORD}" \
-  "CELERY_BROKER_URL=${DEPLOY_CELERY_BROKER_URL}"
+  "CELERY_BROKER_URL=${DEPLOY_CELERY_BROKER_URL}" \
+  "PLUGIN_DAEMON_KEY=${DEPLOY_PLUGIN_DAEMON_KEY}" \
+  "PLUGIN_DAEMON_URL=${DEPLOY_PLUGIN_DAEMON_URL}" \
+  "PLUGIN_REMOTE_INSTALL_HOST=${DEPLOY_PLUGIN_REMOTE_INSTALL_HOST}" \
+  "PLUGIN_REMOTE_INSTALL_PORT=${DEPLOY_PLUGIN_REMOTE_INSTALL_PORT}" \
+  "INNER_API_KEY_FOR_PLUGIN=${DEPLOY_INNER_API_KEY_FOR_PLUGIN}"
 
 ensure_env_file \
   "$ROOT/web/.env.local" \
@@ -101,9 +120,45 @@ ensure_env_file \
   "NEXT_PUBLIC_SOCKET_URL=${DEPLOY_NEXT_PUBLIC_SOCKET_URL}" \
   "NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS=${DEPLOY_NEXT_PUBLIC_TEXT_GENERATION_TIMEOUT_MS}"
 
+ensure_postgres_database() {
+  local database="$1"
+  local host="$2"
+  local port="$3"
+  local username="$4"
+  local password="$5"
+
+  uv run --project "$ROOT/api" python - "$database" "$host" "$port" "$username" "$password" <<'PY'
+import sys
+
+import psycopg2
+
+db_name, db_host, db_port, db_username, db_password = sys.argv[1:]
+
+with psycopg2.connect(
+    host=db_host,
+    port=db_port,
+    user=db_username,
+    password=db_password,
+    dbname="postgres",
+) as conn:
+    conn.autocommit = True
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
+        if cursor.fetchone() is None:
+            cursor.execute(f'CREATE DATABASE "{db_name}"')
+PY
+}
+
 echo "Syncing backend dependencies..."
 cd "$ROOT/api"
 uv sync --group dev
+
+ensure_postgres_database \
+  "$DEPLOY_PLUGIN_DATABASE" \
+  "$DEPLOY_DB_HOST" \
+  "$DEPLOY_DB_PORT" \
+  "$DEPLOY_DB_USERNAME" \
+  "$DEPLOY_DB_PASSWORD"
 
 echo "Syncing frontend dependencies..."
 cd "$ROOT"
@@ -121,10 +176,12 @@ node ./node_modules/next/dist/bin/next build
 
 cd "$ROOT"
 echo "Restarting services..."
+./dev/start-plugin-daemon --stop || true
 ./dev/start-api --stop || true
 ./dev/start-worker --stop || true
 
 ./dev/start-api
+./dev/start-plugin-daemon
 ./dev/start-worker
 ./dev/start-web
 
