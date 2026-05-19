@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
   basePath: env.NEXT_PUBLIC_BASE_PATH,
   ...(allowedDevOrigins?.length ? { allowedDevOrigins } : {}),
   transpilePackages: ['@t3-oss/env-core', '@t3-oss/env-nextjs', 'echarts', 'zrender'],
+  webpack(config) {
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+    }
+
+    return config
+  },
   turbopack: {
     rules: codeInspectorPlugin({
       bundler: 'turbopack',
