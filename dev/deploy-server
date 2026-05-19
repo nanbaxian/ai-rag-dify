@@ -127,25 +127,28 @@ ensure_postgres_database() {
   local username="$4"
   local password="$5"
 
-  uv run --project "$ROOT/api" python - "$database" "$host" "$port" "$username" "$password" <<'PY'
+uv run --project "$ROOT/api" python - "$database" "$host" "$port" "$username" "$password" <<'PY'
 import sys
 
 import psycopg2
 
 db_name, db_host, db_port, db_username, db_password = sys.argv[1:]
 
-with psycopg2.connect(
+conn = psycopg2.connect(
     host=db_host,
     port=db_port,
     user=db_username,
     password=db_password,
     dbname="postgres",
-) as conn:
-    conn.autocommit = True
+)
+conn.autocommit = True
+try:
     with conn.cursor() as cursor:
         cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
         if cursor.fetchone() is None:
             cursor.execute(f'CREATE DATABASE "{db_name}"')
+finally:
+    conn.close()
 PY
 }
 
