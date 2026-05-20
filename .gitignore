@@ -8,7 +8,7 @@ __pycache__/
 .claude/
 .codex
 .gemini/
-
+*.yml
 # C extensions
 *.so
 
