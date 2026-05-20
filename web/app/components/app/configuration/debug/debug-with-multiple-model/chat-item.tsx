@@ -128,11 +128,11 @@ const ChatItem: FC<ChatItemProps> = ({
 
   const allToolIcons = useMemo(() => {
     const icons: Record<string, any> = {}
-    (modelConfig.agentConfig?.tools ?? []).forEach((item: any) => {
+    modelConfig.agentConfig.tools?.forEach((item: any) => {
       icons[item.tool_name] = collectionList.find((collection: any) => canFindTool(collection.id, item.provider_id))?.icon
     })
     return icons
-  }, [collectionList, modelConfig.agentConfig?.tools])
+  }, [collectionList, modelConfig.agentConfig.tools])
 
   if (!chatList.length)
     return null

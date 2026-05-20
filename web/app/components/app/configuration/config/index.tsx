@@ -87,7 +87,7 @@ const Config: FC = () => {
           />
         )}
         {/* Tools */}
-        {isAgent && !(readonly && (modelConfig.agentConfig?.tools?.length ?? 0) === 0) && (
+        {isAgent && !(readonly && modelConfig.agentConfig.tools.length === 0) && (
           <AgentTools />
         )}
 

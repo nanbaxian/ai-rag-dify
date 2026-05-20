@@ -75,7 +75,6 @@ const AgentTools: FC = () => {
   const useSubscribe = useMittContextSelector(s => s.useSubscribe)
   const handleUpdateToolsWhenInstallToolSuccess = useCallback((installedPluginNames: string[]) => {
     const newModelConfig = produce(modelConfig, (draft) => {
-      draft.agentConfig.tools ??= []
       draft.agentConfig.tools.forEach((item: any) => {
         if (item.isDeleted && installedPluginNames.includes(item.provider_id))
           item.isDeleted = false
@@ -87,8 +86,7 @@ const AgentTools: FC = () => {
 
   const handleToolSettingChange = (value: Record<string, any>) => {
     const newModelConfig = produce(modelConfig, (draft) => {
-      draft.agentConfig.tools ??= []
-      const tool = draft.agentConfig.tools.find((item: any) => item.provider_id === currentTool?.collection?.id && item.tool_name === currentTool?.tool_name)
+      const tool = (draft.agentConfig.tools).find((item: any) => item.provider_id === currentTool?.collection?.id && item.tool_name === currentTool?.tool_name)
       if (tool)
         (tool as AgentTool).tool_parameters = value
     })
@@ -118,7 +116,6 @@ const AgentTools: FC = () => {
   }
   const handleSelectTool = (tool: ToolDefaultValue) => {
     const newModelConfig = produce(modelConfig, (draft) => {
-      draft.agentConfig.tools ??= []
       draft.agentConfig.tools.push(getToolValue(tool))
     })
     setModelConfig(newModelConfig)
@@ -126,7 +123,6 @@ const AgentTools: FC = () => {
 
   const handleSelectMultipleTool = (tool: ToolDefaultValue[]) => {
     const newModelConfig = produce(modelConfig, (draft) => {
-      draft.agentConfig.tools ??= []
       draft.agentConfig.tools.push(...tool.map(getToolValue))
     })
     setModelConfig(newModelConfig)
@@ -140,8 +136,7 @@ const AgentTools: FC = () => {
 
   const handleAuthorizationItemClick = useCallback((credentialId: string) => {
     const newModelConfig = produce(modelConfig, (draft) => {
-      draft.agentConfig.tools ??= []
-      const tool = draft.agentConfig.tools.find((item: any) => item.provider_id === currentTool?.provider_id)
+      const tool = (draft.agentConfig.tools).find((item: any) => item.provider_id === currentTool?.provider_id)
       if (tool)
         (tool as AgentTool).credential_id = credentialId
     })
@@ -292,7 +287,6 @@ const AgentTools: FC = () => {
                       className="cursor-pointer rounded-md border-none bg-transparent p-1 text-text-tertiary outline-hidden hover:text-text-destructive focus-visible:ring-1 focus-visible:ring-components-input-border-hover"
                       onClick={() => {
                         const newModelConfig = produce(modelConfig, (draft) => {
-                          draft.agentConfig.tools ??= []
                           draft.agentConfig.tools.splice(index, 1)
                         })
                         setModelConfig(newModelConfig)
@@ -335,7 +329,6 @@ const AgentTools: FC = () => {
                       className="cursor-pointer rounded-md border-none bg-transparent p-1 text-text-tertiary outline-hidden hover:text-text-destructive focus-visible:ring-1 focus-visible:ring-components-input-border-hover"
                       onClick={() => {
                         const newModelConfig = produce(modelConfig, (draft) => {
-                          draft.agentConfig.tools ??= []
                           draft.agentConfig.tools.splice(index, 1)
                         })
                         setModelConfig(newModelConfig)
@@ -356,7 +349,6 @@ const AgentTools: FC = () => {
                       size="md"
                       onCheckedChange={(enabled) => {
                         const newModelConfig = produce(modelConfig, (draft) => {
-                          draft.agentConfig.tools ??= []
                           (draft.agentConfig.tools[index] as any).enabled = enabled
                         })
                         setModelConfig(newModelConfig)
